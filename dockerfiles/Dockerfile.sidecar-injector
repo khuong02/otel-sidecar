@@ -1,0 +1,22 @@
+FROM golang:1.21-alpine as modules
+
+COPY go.mod go.sum /modules/
+WORKDIR /modules
+RUN go mod download
+
+FROM golang:1.21-alpine as builder
+
+COPY --from=modules /go/pkg /go/pkg
+COPY . /sidecar-injector
+WORKDIR /sidecar-injector
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -tags migrate -o /bin/sidecar-injector ./cmd/sidecar-injector
+
+FROM scratch
+WORKDIR /
+COPY --from=builder /bin/sidecar-injector /
+
+EXPOSE 80 443
+
+ENTRYPOINT ["/sidecar-injector"]
