@@ -2,11 +2,12 @@ package config
 
 import (
 	"fmt"
-	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 	configs "tracing/pkg/config"
+
+	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -34,7 +35,7 @@ func NewConfig() (*Config, error) {
 	fmt.Println(dir + "/config.yaml")
 
 	err = cleanenv.ReadConfig(dir+"/config.yaml", cfg)
-	// override default env
+	// overwrite default env
 	err = cleanenv.ReadEnv(cfg)
 	if err != nil {
 		return nil, err
