@@ -158,6 +158,8 @@ spec:
              value: "proxy-otel"
            - name: SERVICE_PROXY_HOSTS
              value: ["0.0.0.0:8080"]
+           - name: TRACER_COLLECTOR_URL
+             value: "0.0.0.0:4317" # grpc tracer collector url
           args:
             - -listen=:8080
             - -text="hello world"
