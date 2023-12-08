@@ -1,0 +1,9 @@
+{
+  "name": "sidecar-injector",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/khuong02/otel-sidecar.git"
+  },
+  "homepage": "https://github.com/khuong02/otel-sidecar#README.md"
+}

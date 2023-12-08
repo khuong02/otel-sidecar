@@ -1,0 +1,33 @@
+image:
+  repository: khuong02/sidecar-injector
+  tag: 0.1.0
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+replicaCount: 1
+
+service:
+  port: 443
+
+container:
+  port: 8443
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+
+sidecars:
+  dataKey: sidecars.yaml
+
+selectors:
+  injectPrefix: sidecar-injector.proxy.com
+  injectName: inject
+  disableInjectLabel: disable-inject
+  objectSelector: {}
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: NotIn
+        values:
+          - kube-system
+          - kube-public
