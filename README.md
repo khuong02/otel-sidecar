@@ -155,8 +155,24 @@ spec:
            - name: SERVICE_PROXY_HOST
              value: "0.0.0.0:8080" #0.0.0.0:your_application_port
            - name: APP_NAME
-             value: "ielts-assessment"
+             value: "proxy-otel"
+           - name: SERVICE_PROXY_HOSTS
+             value: ["0.0.0.0:8080"]
           args:
             - -listen=:8080
             - -text="hello world"
+```
+
+- List env can overwrite:
+```text
+APP_NAME=
+
+SERVICE_PROXY_HOSTS=[]
+
+TRACER_COLLECTOR_URL="0.0.0.0:4317"
+TRACER_INSECURE="true"
+TRACER_LANG="NODE"
+TRACER_SERVER_NAME_OVER=""
+TRACER_STD_OUT_TRACE=false
+TRACER_CP_PATH=""
 ```
