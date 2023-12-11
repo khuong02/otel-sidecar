@@ -16,6 +16,7 @@
     - github.com/gofiber/contrib/otelfiber/v2
 
 ## Project layout
+```
 otel-sidecar
     ├───.github
     ├───.idea
@@ -45,6 +46,7 @@ otel-sidecar
     └───utils
         ├───common
         └───stage
+```
 
 ## Proxy
 - Copy config:
