@@ -2,16 +2,17 @@ package httpd
 
 import (
 	"fmt"
-	"github.com/gofiber/fiber/v2/log"
-	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"net/http"
 	"os"
 	"path/filepath"
 	"tracing/internal/sidecar-injector/admission"
 	"tracing/internal/sidecar-injector/webhook"
+
+	"github.com/gofiber/fiber/v2/log"
+	"github.com/pkg/errors"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type HTTPServer struct {
@@ -38,7 +39,7 @@ func (s *HTTPServer) Start() error {
 	server.Handler = mux
 
 	admissionHandler := &admission.Handler{
-		Handler: &admission.PodAdmissionRequestHandler{
+		Controller: &admission.PodAdmissionRequestController{
 			PodHandler: &s.Patcher,
 		},
 	}

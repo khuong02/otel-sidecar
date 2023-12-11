@@ -14,7 +14,37 @@
         - k8s.io/apimachinery
     - [open-telemetry/opentelemetry-go](https://github.com/open-telemetry/opentelemetry-go)
     - github.com/gofiber/contrib/otelfiber/v2
-    
+
+## Project layout
+otel-sidecar
+    ├───.github
+    ├───.idea
+    ├───cmd
+    │   ├───opentelemetry
+    │   │   └───config
+    │   └───sidecar-injector
+    ├───deployment
+    │   ├───charts
+    │   │   └───sidecar-injector
+    │   │       └───templates
+    │   └───terraform
+    │       └───modules
+    │           └───sidecar
+    ├───dockerfiles
+    ├───internal
+    │   ├───opentelemetry
+    │   │   └───app
+    │   └───sidecar-injector
+    │       ├───admission
+    │       ├───httpd
+    │       └───webhook
+    ├───pkg
+    │   ├───config
+    │   ├───middleware
+    │   └───tracing
+    └───utils
+        ├───common
+        └───stage
 
 ## Proxy
 - Copy config:

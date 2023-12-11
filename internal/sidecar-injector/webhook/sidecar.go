@@ -25,6 +25,8 @@ type Sidecar struct {
 	Labels           map[string]string             `yaml:"labels"`
 }
 
+var _ admission.PodPatcher = &SidecarInjectorPatcher{}
+
 // SidecarInjectorPatcher Sidecar Injector patcher
 type SidecarInjectorPatcher struct {
 	K8sClient                kubernetes.Interface
