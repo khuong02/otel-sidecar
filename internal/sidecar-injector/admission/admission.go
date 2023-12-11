@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/http"
 )
 
 // PatchOperation JsonPatch struct http://jsonpatch.com/
@@ -19,8 +20,8 @@ type PatchOperation struct {
 	Value interface{} `json:"value,omitempty"`
 }
 
-// RequestHandler AdmissionRequest handler
-type RequestHandler interface {
+// AdmissionController AdmissionRequest handler
+type AdmissionController interface {
 	handleAdmissionCreate(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
 	handleAdmissionUpdate(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
 	handleAdmissionDelete(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
@@ -28,7 +29,7 @@ type RequestHandler interface {
 
 // Handler Generic handler for Admission
 type Handler struct {
-	Handler RequestHandler
+	Controller AdmissionController
 }
 
 // HandleAdmission HttpServer function to handle Admissions
@@ -56,32 +57,54 @@ func (handler *Handler) HandleAdmission(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	ctx := context.Background()
+	ctx := request.Context()
 
 	req := admReview.Request
-	log.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v UID=%v patchOperation=%v UserInfo=%v", req.Kind, req.Namespace, req.Name, req.UID, req.Operation, req.UserInfo)
-	if patchOperations, err := handler.Process(ctx, req); err != nil {
-		message := fmt.Sprintf("request for object '%s' with name '%s' in namespace '%s' denied: %v", req.Kind.String(), req.Name, req.Namespace, err)
+
+	log.Debugf(
+		"AdmissionReview for Kind=%v, Namespace=%v Name=%v UID=%v patchOperation=%v UserInfo=%v\n",
+		req.Kind, req.Namespace,
+		req.Name, req.UID,
+		req.Operation, req.UserInfo,
+	)
+	var (
+		patchOperations []PatchOperation
+		patchBytes      []byte
+	)
+
+	if patchOperations, err = handler.Process(ctx, req); err != nil {
+		message := fmt.Sprintf(
+			"request for object '%s' with name '%s' in namespace '%s' denied: %v",
+			req.Kind.String(), req.Name,
+			req.Namespace, err,
+		)
 		log.Error(message)
 		handler.writeDeniedAdmissionResponse(&admReview, message, writer)
-	} else if patchBytes, err := json.Marshal(patchOperations); err != nil {
-		message := fmt.Sprintf("request for object '%s' with name '%s' in namespace '%s' denied: %v", req.Kind.String(), req.Name, req.Namespace, err)
-		log.Error(message)
-		handler.writeDeniedAdmissionResponse(&admReview, message, writer)
-	} else {
-		handler.writeAllowedAdmissionReview(&admReview, patchBytes, writer)
+		return
 	}
+
+	if patchBytes, err = json.Marshal(patchOperations); err != nil {
+		message := fmt.Sprintf(
+			"request for object '%s' with name '%s' in namespace '%s' denied: %v",
+			req.Kind.String(), req.Name,
+			req.Namespace, err)
+		log.Error(message)
+		handler.writeDeniedAdmissionResponse(&admReview, message, writer)
+		return
+	}
+
+	handler.writeAllowedAdmissionReview(&admReview, patchBytes, writer)
 }
 
 // Process Handles the AdmissionRequest via the handler
 func (handler *Handler) Process(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
 	switch request.Operation {
 	case admissionv1.Create:
-		return handler.Handler.handleAdmissionCreate(ctx, request)
+		return handler.Controller.handleAdmissionCreate(ctx, request)
 	case admissionv1.Update:
-		return handler.Handler.handleAdmissionUpdate(ctx, request)
+		return handler.Controller.handleAdmissionUpdate(ctx, request)
 	case admissionv1.Delete:
-		return handler.Handler.handleAdmissionDelete(ctx, request)
+		return handler.Controller.handleAdmissionDelete(ctx, request)
 	default:
 		return nil, fmt.Errorf("unhandled request operations type %s", request.Operation)
 	}
@@ -102,7 +125,7 @@ func validateRequest(req *http.Request) error {
 }
 
 func readRequestBody(req *http.Request) ([]byte, error) {
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read Request Body: %v", err)
 	}
